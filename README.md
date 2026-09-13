@@ -70,10 +70,13 @@ going to arrive for free. So it arrives deliberately:
 | --- | --- | --- |
 | `AS OF SYSTEM TIME <seq>` | the exact state at a point in history | CockroachDB |
 | `VALID AS OF <time>` | what was *believed true* as of then | SQL:2011 application time |
-| `TRACE <id>` | the causal chain that produced this record | `WITH RECURSIVE` |
-| `LINK` / `TRAVERSE` | relationships, without a join table | graph SQL |
+| `TRACE <id>` 🔨 | the causal chain that produced this record | `WITH RECURSIVE` |
+| `LINK` / `TRAVERSE` 🔨 | relationships, without a join table | graph SQL |
 | `SEARCH` | full-text over document fields | `tsquery` |
 | `_hash` `_seq` `_caused_by` | provenance, selectable like any column | — |
+
+The rows marked 🔨 are not in the SQL grammar yet and answer on the NQL path today;
+the rest are live behind `NEDBD_SQL_ENGINE=1`.
 
 And what the vendored grammar hands us for free, which the old translator refused
 by name: `WITH RECURSIVE`, window functions, `GROUPING SETS`, and `MERGE` — upsert,
@@ -106,31 +109,55 @@ tables, and no application code.
 
 ## Status: pre-release, and honest about it
 
-This repository is the **grammar and the front-end**, being built in the open. It is
-not installable yet, and the package on each registry is a reserved name, not a
-product. When that changes it will change here first.
+**neSQL is nedb-engine under its own name.** Not a rewrite, not a subset, not a
+port — the same Rust core, the same content-addressed DAG, the same hash chain,
+mirrored and repackaged so the SQL-first story leads. When it publishes for real,
+it publishes that engine.
+
+Which makes the honest thing to say about *today*: the code already exists and it
+already ships, as [`nedb-engine`](https://github.com/Eth-Interchained/nedb). Set
+`NEDBD_SQL_ENGINE=1` on a current `nedbd` and the SQL engine described on this
+page is what answers your queries — joins, subqueries, set operations, several
+named aggregates in one grouped row, and NQL's own verbs as SQL clauses that
+compose with all of it.
+
+So this repository holds the **grammar and the identity**. The package on each
+registry is a reserved name, not a product: each one loads and answers
+`is_release() == false`, because a package that imports cleanly and then lies is
+worse than one that isn't published.
 
 | | |
 | --- | --- |
 | ✅ | PostgreSQL 17.4 grammar + catalogue vendored, licence intact |
-| ✅ | Executor foundations shipped in nedb-engine — joins, subqueries, set operations, `array_agg(x ORDER BY y)`, derived tables, `generate_series` |
-| 🔨 | neSQL grammar delta — the temporal and causal clauses above |
-| 🔨 | One IR: neSQL and NQL compiling to the same plan, so nothing translates |
-| 🔨 | The executor pointed at user collections, not only the catalogue |
-| 📋 | Cross-front-end parity assertions — the same question through both, same answer |
+| ✅ | The executor — joins, subqueries, `EXISTS`, set operations, `array_agg(x ORDER BY y)`, derived tables, `generate_series` |
+| ✅ | Pointed at user collections, not only the catalogue, behind `NEDBD_SQL_ENGINE=1` |
+| ✅ | `AS OF SYSTEM TIME`, `VALID AS OF`, `SEARCH` as SQL clauses — NQL's verbs, one implementation, two front-ends |
+| ✅ | Cross-engine parity assertions in CI — the same corpus through both, asserted identical |
+| ✅ | The `WHERE` pushed into the storage scan, so a filtered query stops reading whole collections |
+| 🔨 | `TRACE` and `TRAVERSE` — SQL has no spelling for them yet; they answer on the NQL path |
+| 🔨 | The flag becoming the default, which wants a bigger corpus and a measured large collection first |
+| 📋 | Mirror, rename, repackage, publish — this engine under this name |
 
 **Today, right now, in production:** the PostgreSQL endpoint in
 [`nedb-engine`](https://github.com/Eth-Interchained/nedb) already answers `psql`,
 SQLAlchemy (Core *and* ORM), asyncpg and node-postgres against a live store, with
-`pg_catalog` and `information_schema` implemented as genuinely queryable relations.
-neSQL is where that stops needing an asterisk.
+`pg_catalog` and `information_schema` implemented as genuinely queryable
+relations — and with `NEDBD_SQL_ENGINE=1`, a real SQL evaluator rather than a
+translation.
+
+It is opt-in for a reason worth stating rather than burying. The parity harness
+proves the two engines agree across its corpus — but a corpus proves agreement on
+the shapes somebody thought to test. The evaluator also still materialises each
+relation: the `WHERE` reaches the scan, which narrows *what* is read, not
+*whether*. "Correct on a handful of rows" is not "safe on millions", so the
+default moves when a bigger corpus and a measured large collection say it can.
 
 ## The names
 
 ```bash
 pip install nesql                  # PyPI
 cargo add nesql                    # crates.io
-npm install nesql-engine           # npm  (or @interchained/nesql)
+npm install nesql-engine           # npm
 ```
 
 All three are **reserved placeholders** today — each one loads, reports the vendored
@@ -140,8 +167,13 @@ isn't published yet.
 
 On npm the bare name `nesql` is refused by the registry's typosquat guard — *"too
 similar to existing packages mssql, mysql"* — which, given the company that puts us in,
-we will take. `nesql-engine` is the unscoped name and `@interchained/nesql` is the
-scoped one; both are ours.
+we will take. `nesql-engine` is the name.
+
+An earlier version of this file claimed `@interchained/nesql` as a scoped alias. It
+is not ours: `npm publish` printed success and the registry still 404s, so the
+scope does not exist on the account. Recorded rather than quietly deleted, because
+"the publish said it worked" is exactly the kind of evidence that should not have
+been trusted without checking the registry.
 
 ## Licence
 
