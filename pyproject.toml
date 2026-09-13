@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nesql"
+version = "0.0.1"
+description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. Pre-release: name reserved, grammar vendored."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "BUSL-1.1" }
+authors = [{ name = "Interchained LLC", email = "licensing@interchained.org" }]
+keywords = ["sql", "postgresql", "database", "temporal", "time-travel", "nedb", "nesql"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Rust",
+  "Topic :: Database",
+  "Topic :: Database :: Database Engines/Servers",
+]
+
+[project.urls]
+Homepage = "https://github.com/Eth-Interchained/neSQL"
+Repository = "https://github.com/Eth-Interchained/neSQL"
+Engine = "https://github.com/Eth-Interchained/nedb"
+
+[tool.setuptools]
+packages = ["nesql"]

@@ -1,0 +1,19 @@
+[package]
+name = "nesql"
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.74"
+description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. Pre-release: name reserved, grammar vendored."
+license = "BUSL-1.1"
+repository = "https://github.com/Eth-Interchained/neSQL"
+homepage = "https://github.com/Eth-Interchained/neSQL"
+documentation = "https://docs.rs/nesql"
+readme = "README.md"
+keywords = ["sql", "postgresql", "database", "temporal", "nedb"]
+categories = ["database", "parser-implementations"]
+authors = ["Interchained LLC <licensing@interchained.org>"]
+exclude = ["vendor/**", "node/**", "python/**", "docs/**"]
+
+[lib]
+name = "nesql"
+path = "src/lib.rs"

@@ -1,0 +1,15 @@
+{
+  "name": "nesql",
+  "version": "0.0.1",
+  "description": "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. Pre-release: name reserved, grammar vendored.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": ["index.js", "index.d.ts", "README.md", "LICENSE"],
+  "keywords": ["sql", "postgresql", "database", "temporal", "time-travel", "nedb", "nesql"],
+  "homepage": "https://github.com/Eth-Interchained/neSQL",
+  "repository": { "type": "git", "url": "git+https://github.com/Eth-Interchained/neSQL.git" },
+  "bugs": { "url": "https://github.com/Eth-Interchained/neSQL/issues" },
+  "author": "Interchained LLC <licensing@interchained.org>",
+  "license": "BUSL-1.1",
+  "engines": { "node": ">=18" }
+}
