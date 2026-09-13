@@ -7,7 +7,7 @@
 *The SQL you already write — over a database that never forgets, and can prove it.*
 
 [![PyPI](https://img.shields.io/pypi/v/nesql?label=PyPI&color=6366f1)](https://pypi.org/project/nesql/)
-[![npm](https://img.shields.io/npm/v/nesql?label=npm&color=00d4ff)](https://www.npmjs.com/package/nesql)
+[![npm](https://img.shields.io/npm/v/nesql-engine?label=npm&color=00d4ff)](https://www.npmjs.com/package/nesql-engine)
 [![crates.io](https://img.shields.io/crates/v/nesql?label=crates.io&color=f97316)](https://crates.io/crates/nesql)
 [![status](https://img.shields.io/badge/status-pre--release-a855f7)](https://github.com/Eth-Interchained/neSQL)
 [![grammar](https://img.shields.io/badge/grammar-PostgreSQL%2017.4-336791)](vendor/postgresql/COPYRIGHT)
@@ -124,6 +124,24 @@ product. When that changes it will change here first.
 SQLAlchemy (Core *and* ORM), asyncpg and node-postgres against a live store, with
 `pg_catalog` and `information_schema` implemented as genuinely queryable relations.
 neSQL is where that stops needing an asterisk.
+
+## The names
+
+```bash
+pip install nesql                  # PyPI
+cargo add nesql                    # crates.io
+npm install nesql-engine           # npm  (or @interchained/nesql)
+```
+
+All three are **reserved placeholders** today — each one loads, reports the vendored
+PostgreSQL release, and answers `is_release() == false`. None of them pretends to be a
+driver, because a package that imports cleanly and then lies is worse than one that
+isn't published yet.
+
+On npm the bare name `nesql` is refused by the registry's typosquat guard — *"too
+similar to existing packages mssql, mysql"* — which, given the company that puts us in,
+we will take. `nesql-engine` is the unscoped name and `@interchained/nesql` is the
+scoped one; both are ours.
 
 ## Licence
 
