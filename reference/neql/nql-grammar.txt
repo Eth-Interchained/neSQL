@@ -1,0 +1,63 @@
+NQL — the temporal/causal half of neQL
+=======================================
+
+GENERATED. Do not edit by hand; run scripts/sync-reference.sh.
+
+  source   rust/nedb-v2/src/nql.rs
+  commit   48128d38  (Eth-Interchained/nedb)
+
+This is the grammar as the RUST engine documents it — the implementation that
+backs nedbd, the napi addon and the PyO3 wheel. NEDB also carries an
+independent Python reference implementation (python/nedb/query.py); the two
+are held to identical answers by cross-engine parity tests in the engine
+repository, but this file is extracted from the Rust one and says so rather
+than claiming to describe both.
+
+NQL is one half of neQL. The other half is PostgreSQL's own grammar, vendored
+under vendor/postgresql/. Which half a statement is read as is decided by its
+leading keyword — see reference/neql/grammar.txt.
+
+-----------------------------------------------------------------------------
+
+NQL (NEDB Query Language) parser and executor for v2 DAG storage.
+
+Grammar:
+  FROM coll
+    [AS OF seq]
+    [VALID AS OF "date"]
+    [WHERE <predicate>]
+    [SEARCH "text"]
+    [ORDER BY field [ASC|DESC]]
+    [LIMIT n]
+    [GROUP BY field COUNT|SUM|AVG|MIN|MAX]
+    [TRACE caused_by [REVERSE]]
+
+where <predicate> is a full boolean expression:
+
+  <predicate> := <or>
+  <or>        := <and> [OR <and>]*
+  <and>       := <not> [AND <not>]*
+  <not>       := [NOT] <primary>
+  <primary>   := "(" <predicate> ")" | <comparison>
+  <comparison>:= field ( = | != | > | < | >= | <= ) value
+               | field [NOT] IN "(" value [, value]* ")"
+               | field [NOT] BETWEEN value AND value
+               | field [NOT] LIKE|ILIKE "pattern"
+               | field IS [NOT] NULL
+
+Until 3.3.0 the predicate surface was six operators wide (= != > < >= <=)
+joined by an implicit AND, with no grouping, no negation and no set/range/
+pattern tests. Every one of those is table stakes in SQL, and their absence
+is the single most visible gap against a SQL engine: the queries people
+actually type (`status IN ('open','pending')`, `height BETWEEN 100 AND 200`,
+`name LIKE 'ac%'`) had to be decomposed by hand or filtered client-side.
+
+NOTE ON STRICTNESS. The old parser ended its clause loop with
+`_ => { self.advance(); }` — "skip unrecognised". That is the same defect
+class as a swallowed write error: a query containing a clause the engine
+does not implement did not fail, it silently returned the results of a
+DIFFERENT query. `FROM x WHERE a = 1 OFFSET 5` dropped both tokens and
+answered without the offset; a misspelled `ORDRE BY height` answered
+unsorted. Unknown tokens are now a parse error. This is deliberately
+breaking for queries that were already being silently misread — there was
+no correct behaviour to preserve.

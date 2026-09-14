@@ -60,6 +60,44 @@ We are not reimplementing SQL from memory. We are starting from the definition e
 other tool in the world was built against, and adding to it — the same road
 CockroachDB, Materialize and RisingWave all took.
 
+### What you can read here
+
+neQL is the whole language: **NQL and PostgreSQL SQL**, not one or the other. All
+three faces of it are in this repository, side by side, so the language can be read
+where its name lives:
+
+```
+vendor/postgresql/gram.y            the SQL half — upstream, unmodified
+reference/neql/nql-grammar.txt      the NQL half — clauses, predicates, temporal verbs
+reference/neql/grammar.txt          the command surface, and its digest
+reference/neql/grammar.json         the same, machine-readable
+reference/nesql-cli/                the CLI's source, including its tests
+reference/SOURCE.json               which engine commit all of the above came from
+```
+
+Routing between the halves is **structural, not guessed**: NQL statements begin
+`FROM`, and PostgreSQL has no statement form that begins with `FROM`, so the leading
+keyword partitions the two vocabularies rather than hinting at them. A first word in
+neither is refused *naming both*, never routed to whichever parser seemed likelier.
+`--nql` / `--sql` force a dialect, for when you want that dialect's own error instead
+of a routing one.
+
+Everything under `reference/` is **generated** — `scripts/sync-reference.sh <nedb>`
+rebuilds it, and the command surface is read out of the built binary rather than
+transcribed. That is deliberate, and it is a scar. Engine **v6.0.0** shipped a
+`nesql grammar` that announced
+
+```
+query <NQL>                   run an NQL query
+diff, tag, branch, merge      reserved; not yet wired (exit 2)
+```
+
+for a `query` that had been answering Postgres SQL for weeks and four verbs that had
+worked since they were wired — and its grammar digest was byte-identical to the
+previous release's, because the text had never been *edited*, only become untrue. A
+hand-maintained copy of a grammar is a copy that will eventually say that. So this
+one is generated, and `reference/SOURCE.json` records the digest to compare against.
+
 ### The clauses we add, and why
 
 PostgreSQL's grammar contains **no** temporal SQL — we checked, and `SYSTEM_TIME`,

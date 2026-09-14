@@ -4,3 +4,9 @@ node_modules/
 dist/
 *.egg-info/
 __pycache__/
+
+# setuptools leaves build/lib/ behind on `pip install .` / `python -m build`.
+# A copy of nesql/__init__.py was committed from it, so the repo carried two
+# versions of the same module and only one of them was the real one.
+build/
+*.dist-info/

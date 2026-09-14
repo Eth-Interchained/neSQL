@@ -1,0 +1,81 @@
+nesql — grammar_v1
+
+  nesql [GLOBAL]... <command> [ARGS]...
+
+GLOBAL FLAGS  (accepted before or after the command; `--` ends flag parsing)
+  --db <path>        the database directory
+                     default: $NEDB_PATH, else ./nedb-data
+  --json             machine output: exact, stable, one JSON object on stdout
+  --human            human output (the default; stated explicitly)
+  -h, --help         this grammar
+  --version          alias for `nesql version`
+
+COMMANDS
+  status                        database summary: path, seq, collections,
+                                state root, history floor
+  log [--limit N] [--since SEQ] writes in (SEQ, head], newest-first
+  inspect <thing>               one thing, named unambiguously (see THINGS)
+  root create [--at SEQ]        persist a state root (default: current seq)
+  root inspect [SEQ]            a persisted root record
+                                no SEQ = the most recent persisted record;
+                                for the LIVE root, use `nesql status`
+  root verify [SEQ]             recompute a persisted root and compare
+                                no SEQ = the most recent persisted record
+  root list                     every persisted root record
+  grammar                       this grammar surface and its digest
+  constitution                  the engine's constitution + compatibility check
+  version                       CLI version AND engine version
+  query <neQL> [--nql|--sql]    run neQL: NQL or Postgres SQL
+                                the dialect is chosen by the leading keyword
+                                (NQL statements begin FROM; SQL begins SELECT,
+                                INSERT, UPDATE, DELETE, EXPLAIN, WITH, SHOW,
+                                SET, VALUES, TABLE, BEGIN, COMMIT, ROLLBACK)
+                                --nql / --sql force one, to get that dialect's
+                                own error instead of a routing error
+  diff <FROM> <TO>              what changed between two sequences
+  tag create <NAME> <SEQ> [--message M]
+                                name a sequence, immutably
+  tag inspect <NAME>            one tag
+  tag list [--all]              every tag (--all includes deleted)
+  tag delete <NAME>             remove a tag reference
+  branch create <NAME> <SEQ>    a branch off a sequence
+  branch put <NAME> <COLL> <ID> <JSON>
+                                write into a branch's overlay
+  branch rm <NAME> <COLL> <ID>  delete within a branch's overlay
+  branch inspect <NAME>         one branch and its overlay
+  branch list [--all]           every branch (--all includes abandoned)
+  branch abandon <NAME>         stop a branch without merging it
+  merge plan <NAME>             what merging a branch would do, and conflicts
+  merge execute <NAME>          replay a branch's overlay onto the trunk
+  merge resolve <NAME> <COLL> <ID> (--ours|--theirs)
+                                settle one conflict; the side is REQUIRED,
+                                because there is no safe default for which
+                                edit wins
+
+THINGS  (the argument to `inspect`)
+  A thing is named by KIND, because the kinds are not distinguishable by shape.
+
+  collection:<name>   a collection          (alias: coll:)
+  document:<coll>/<id>  one document        (alias: doc:)
+  root:<seq>          a persisted root record
+  seq:<n>             the write at one sequence number
+
+  Two bare forms are accepted, and only because exactly one kind can be meant:
+  <coll>/<id>         a document — a collection name cannot contain '/'
+  <name>              a collection — every other kind needs a marker
+
+  A bare number is REFUSED. `42` could be seq:42 or root:42, and the CLI does
+  not pick one.
+
+EXIT CODES
+  0  success — the thing was done, or the check ran and passed
+  1  failure — the operation ran and did not succeed
+  2  usage   — the command line was not understood, or was ambiguous
+  3  could not determine — the check could not run (e.g. history pruned).
+                           NOT a failure, and deliberately not folded into one
+  4  not found — the named thing does not exist
+  5  unsupported — a version or format this build does not know
+
+
+version  grammar_v1
+digest   6813faa25e39f4e4eb9354134bb6d2a1ccfa7d5ef54b9fa7a5af67ca2080f779
