@@ -12,7 +12,21 @@ readme = "README.md"
 keywords = ["sql", "postgresql", "database", "temporal", "nedb"]
 categories = ["database", "parser-implementations"]
 authors = ["Interchained LLC <licensing@interchained.org>"]
-exclude = ["vendor/**", "node/**", "python/**", "docs/**"]
+# `vendor/**` USED to be excluded, while src/lib.rs told the reader "the
+# grammar is vendored (PostgreSQL 17.4 gram.y, licence intact)". Both cannot be
+# true: a `cargo add nesql` user got neither the grammar nor an engine, so the
+# crate's one substantive claim was false for exactly the people who installed
+# it. vendor/ is 696K, the crates.io limit is 10MB, and the claim is worth more
+# than the bytes -- so it ships, and COPYRIGHT ships with it.
+#
+# `reference/` stays out, and that is a statement rather than an oversight: it
+# is a COPY of nesql-cli's source and of the grammar, whose source of truth is
+# Eth-Interchained/nedb. It exists so onlookers can read the language in the
+# repository that bears its name. A crate consumer reads docs.rs and links the
+# real crates, so shipping a second copy of someone else's source inside this
+# package would only create a staler copy. Read it on GitHub, or regenerate it
+# with scripts/sync-reference.sh.
+exclude = ["reference/**", "node/**", "python/**", "docs/**", "build/**"]
 
 [lib]
 name = "nesql"
