@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 INTERCHAINED LLC
+# SPDX-License-Identifier: BUSL-1.1
+
+# Publishes the nesql packages when a version tag lands (npm; crates.io is
+# published from the engine repo where the crate lives, and PyPI by twine
+# from a checkout — this workflow exists because registry.npmjs.org is the
+# one registry an operator cannot reach by hand from everywhere).
+name: publish
+
+on:
+  push:
+    tags: ["v*", "*.*.*"]
+  workflow_dispatch:
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - name: Publish nesql-engine to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
