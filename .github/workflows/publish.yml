@@ -9,7 +9,7 @@ name: publish
 
 on:
   push:
-    tags: ["v*", "*.*.*"]
+    tags: ["v*", "*.*.*", "nesql-engine-*"]
   workflow_dispatch:
 
 jobs:
