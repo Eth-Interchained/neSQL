@@ -1,6 +1,22 @@
 [package]
+# NOT PUBLISHED FROM HERE — see `publish` below.
+#
+# This crate held the `nesql` name on crates.io as a 0.0.1 reservation while the
+# real CLI had nowhere to ship from. That is no longer the situation: the CLI is
+# a working binary with 88 tests, and it now publishes AS `nesql` from
+# Eth-Interchained/nedb, where its source lives.
+#
+# Two repositories declaring one crate name is not a name conflict — they share
+# an owner — it is a RACE. Whichever published last would decide what `cargo add
+# nesql` meant, and the answer would change without either repo's history
+# showing why. So exactly one of them publishes, and this is not it.
+#
+# What stays here is the thing this repository is for: the vendored PostgreSQL
+# grammar, the NQL grammar, the readable CLI reference, and the constitution in
+# README.md.
 name = "nesql"
 version = "0.0.1"
+publish = false
 edition = "2021"
 rust-version = "1.74"
 description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. Pre-release: name reserved, grammar vendored."
