@@ -1,9 +1,9 @@
 [package]
 name = "nesql"
-version = "0.0.1"
+version = "8.0.0"
 edition = "2021"
 rust-version = "1.74"
-description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. Pre-release: name reserved, grammar vendored."
+description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. The neSQL CLI and the language reference. Ships inside nedb-engine."
 license = "BUSL-1.1"
 repository = "https://github.com/Eth-Interchained/neSQL"
 homepage = "https://github.com/Eth-Interchained/neSQL"

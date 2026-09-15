@@ -62,7 +62,7 @@ cp -r "$ENGINE/rust/nesql-cli/src" \
 # publishing this, so asking the binary is the only answer that cannot drift
 # from the binary.
 mkdir -p "$HERE/reference/neql"
-( cd "$ENGINE/rust" && cargo build -q -p nesql-cli )
+( cd "$ENGINE/rust" && cargo build -q -p nesql )  # crate is `nesql`; the DIRECTORY is nesql-cli
 BIN="$ENGINE/rust/target/debug/nesql"
 "$BIN" grammar        > "$HERE/reference/neql/grammar.txt"
 "$BIN" grammar --json > "$HERE/reference/neql/grammar.json"

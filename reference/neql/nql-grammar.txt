@@ -4,7 +4,7 @@ NQL — the temporal/causal half of neQL
 GENERATED. Do not edit by hand; run scripts/sync-reference.sh.
 
   source   rust/nedb-v2/src/nql.rs
-  commit   75b27c68  (Eth-Interchained/nedb)
+  commit   b416fbba  (Eth-Interchained/nedb)
 
 This is the grammar as the RUST engine documents it — the implementation that
 backs nedbd, the napi addon and the PyO3 wheel. NEDB also carries an
