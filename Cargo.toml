@@ -1,33 +1,60 @@
 [package]
-name = "nesql"
-version = "8.0.0"
-edition = "2021"
-rust-version = "1.74"
-description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. The neSQL CLI and the language reference. Ships inside nedb-engine."
-license = "BUSL-1.1"
-repository = "https://github.com/Eth-Interchained/neSQL"
-homepage = "https://github.com/Eth-Interchained/neSQL"
+name        = "nesql"
+version     = "8.0.0"
+edition     = "2021"
+license     = "BUSL-1.1"
+description = "neSQL — PostgreSQL SQL plus NEDB's own clauses, and the command-line surface for a NEDB store"
+repository  = "https://github.com/Eth-Interchained/neSQL"
+homepage    = "https://github.com/Eth-Interchained/neSQL"
 documentation = "https://docs.rs/nesql"
-readme = "README.md"
-keywords = ["sql", "postgresql", "database", "temporal", "nedb"]
-categories = ["database", "parser-implementations"]
-authors = ["Interchained LLC <licensing@interchained.org>"]
-# `vendor/**` USED to be excluded, while src/lib.rs told the reader "the
-# grammar is vendored (PostgreSQL 17.4 gram.y, licence intact)". Both cannot be
-# true: a `cargo add nesql` user got neither the grammar nor an engine, so the
-# crate's one substantive claim was false for exactly the people who installed
-# it. vendor/ is 696K, the crates.io limit is 10MB, and the claim is worth more
-# than the bytes -- so it ships, and COPYRIGHT ships with it.
-#
-# `reference/` stays out, and that is a statement rather than an oversight: it
-# is a COPY of nesql-cli's source and of the grammar, whose source of truth is
-# Eth-Interchained/nedb. It exists so onlookers can read the language in the
-# repository that bears its name. A crate consumer reads docs.rs and links the
-# real crates, so shipping a second copy of someone else's source inside this
-# package would only create a staler copy. Read it on GitHub, or regenerate it
-# with scripts/sync-reference.sh.
-exclude = ["reference/**", "node/**", "python/**", "docs/**", "build/**"]
+authors     = ["Interchained LLC <licensing@interchained.org>"]
+readme      = "README.md"
+keywords    = ["sql", "postgresql", "database", "temporal", "time-travel", "provenance", "nedb"]
+categories  = ["database", "command-line-utilities", "parser-implementations"]
+
+# The grammar is vendored (PostgreSQL 17.4, licence intact) and ships with the
+# crate — a `cargo add nesql` user gets the grammar the crate claims, with its
+# COPYRIGHT. The file weights are trivial against the crates.io 10MB limit,
+# and the claim is worth more than the bytes.
+# `reference/` and `nesql/` (the Python mirror package) stay out of the CRATE —
+# they are repo-side mirrors whose source of truth is the engine repo and the
+# CLI above, and a second copy inside the tarball would only go stale.
+include = [
+    "src/**",
+    "tests/**",
+    "build.rs",
+    "vendor/postgresql/**",
+    "README.md",
+    "LICENSE",
+    "COPYING-APACHE-2.0.txt",
+]
+exclude = ["reference/**", "nesql/**", "node/**", "python/**", "docs/**", "build/**", "dist/**"]
+
+[[bin]]
+name = "nesql"
+path = "src/main.rs"
 
 [lib]
+# The command functions are a library so the integration tests can call them
+# directly against a real engine database, rather than spawning a binary and
+# parsing its stdout. Tests that assert on process output test the renderer;
+# tests that call the command test the decision.
 name = "nesql"
 path = "src/lib.rs"
+
+[dependencies]
+# The engine — from the REGISTRY, the same crate nedb-engine publishes to.
+# This crate is the neSQL command surface ON TOP of that engine; the engine
+# repo (Eth-Interchained/nedb) vendors this CLI's source as rust/nesql-cli,
+# and the two are kept in lockstep by the engine's release tooling.
+# A VERSION requirement is declared so a major engine bump fails THIS build
+# loudly instead of being reported as a version the CLI was never checked
+# against.
+nedb-engine = "8.0.0"
+
+serde_json = { version = "1", features = ["preserve_order"] }
+blake2     = "0.10"
+hex        = "0.4"
+
+[dev-dependencies]
+tempfile = "3"

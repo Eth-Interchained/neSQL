@@ -9,7 +9,8 @@
 [![PyPI](https://img.shields.io/pypi/v/nesql?label=PyPI&color=6366f1)](https://pypi.org/project/nesql/)
 [![npm](https://img.shields.io/npm/v/nesql-engine?label=npm&color=00d4ff)](https://www.npmjs.com/package/nesql-engine)
 [![crates.io](https://img.shields.io/crates/v/nesql?label=crates.io&color=f97316)](https://crates.io/crates/nesql)
-[![status](https://img.shields.io/badge/status-pre--release-a855f7)](https://github.com/Eth-Interchained/neSQL)
+[![status](https://img.shields.io/badge/status-shipped-34d399)](https://github.com/Eth-Interchained/neSQL)
+[![docs](https://img.shields.io/badge/docs-NQL%20%2B%20specs-818cf8)](docs/)
 [![grammar](https://img.shields.io/badge/grammar-PostgreSQL%2017.4-336791)](vendor/postgresql/COPYRIGHT)
 
 **[nedb-engine](https://github.com/Eth-Interchained/nedb)** · **[Studio](https://studio.interchained.org)**
@@ -89,7 +90,7 @@ transcribed. That is deliberate, and it is a scar. Engine **v6.0.0** shipped a
 
 ```
 query <NQL>                   run an NQL query
-diff, tag, branch, merge      reserved; not yet wired (exit 2)
+diff, tag, branch, merge      data versioning, first-class conflicts
 ```
 
 for a `query` that had been answering Postgres SQL for weeks and four verbs that had
@@ -106,15 +107,16 @@ going to arrive for free. So it arrives deliberately:
 
 | neSQL | what it answers | precedent |
 | --- | --- | --- |
-| `AS OF SYSTEM TIME <seq>` | the exact state at a point in history | CockroachDB |
+| `AS OF SYSTEM TIME <seq \| datetime>` | the exact state at a point in history — a sequence, or a wall-clock moment resolved to the last write at or before it | CockroachDB |
 | `VALID AS OF <time>` | what was *believed true* as of then | SQL:2011 application time |
-| `TRACE <id>` 🔨 | the causal chain that produced this record | `WITH RECURSIVE` |
-| `LINK` / `TRAVERSE` 🔨 | relationships, without a join table | graph SQL |
+| `TRACE <id>` | the causal chain that produced this record — answered on the FROM-form path, one implementation | `WITH RECURSIVE` |
+| `LINK` / `TRAVERSE` | relationships, without a join table — same path | graph SQL |
 | `SEARCH` | full-text over document fields | `tsquery` |
-| `_hash` `_seq` `_caused_by` | provenance, selectable like any column | — |
+| `_hash` `_seq` `_caused_by` | provenance, selectable like any column — and settable from SQL | — |
 
-The rows marked 🔨 are not in the SQL grammar yet and answer on the NQL path today;
-the rest are live behind `NEDBD_SQL_ENGINE=1`.
+NEDB's clauses are additions **to** the vendored grammar, and the FROM-form that
+carries them natively is one of neSQL's two statement shapes — one grammar, one
+executor, never a second language to learn.
 
 And what the vendored grammar hands us for free, which the old translator refused
 by name: `WITH RECURSIVE`, window functions, `GROUPING SETS`, and `MERGE` — upsert,
@@ -145,63 +147,57 @@ The first query is the point. It is not a NEDB query. It is a query — and the 
 trail underneath it is free, permanent, and hash-verified, with no triggers, no shadow
 tables, and no application code.
 
-## Status: pre-release, and honest about it
+## Status: shipped, and version-aligned
 
 **neSQL is nedb-engine under its own name.** Not a rewrite, not a subset, not a
-port — the same Rust core, the same content-addressed DAG, the same hash chain,
-mirrored and repackaged so the SQL-first story leads. When it publishes for real,
-it publishes that engine.
-
-Which makes the honest thing to say about *today*: the code already exists and it
-already ships, as [`nedb-engine`](https://github.com/Eth-Interchained/nedb). Set
-`NEDBD_SQL_ENGINE=1` on a current `nedbd` and the SQL engine described on this
-page is what answers your queries — joins, subqueries, set operations, several
-named aggregates in one grouped row, and NQL's own verbs as SQL clauses that
-compose with all of it.
-
-So this repository holds the **grammar and the identity**. The package on each
-registry is a reserved name, not a product: each one loads and answers
-`is_release() == false`, because a package that imports cleanly and then lies is
-worse than one that isn't published.
+port — the same Rust core, the same content-addressed DAG, the same hash chain.
+This repository is the language's home: the vendored grammar, the real `nesql`
+CLI crate, the NQL reference, and the NEDB specs.
 
 | | |
 | --- | --- |
-| ✅ | PostgreSQL 17.4 grammar + catalogue vendored, licence intact |
-| ✅ | The executor — joins, subqueries, `EXISTS`, set operations, `array_agg(x ORDER BY y)`, derived tables, `generate_series` |
-| ✅ | Pointed at user collections, not only the catalogue, behind `NEDBD_SQL_ENGINE=1` |
-| ✅ | `AS OF SYSTEM TIME`, `VALID AS OF`, `SEARCH` as SQL clauses — NQL's verbs, one implementation, two front-ends |
-| ✅ | Cross-engine parity assertions in CI — the same corpus through both, asserted identical |
-| ✅ | The `WHERE` pushed into the storage scan, so a filtered query stops reading whole collections |
-| 🔨 | `TRACE` and `TRAVERSE` — SQL has no spelling for them yet; they answer on the NQL path |
-| 🔨 | The flag becoming the default, which wants a bigger corpus and a measured large collection first |
-| 📋 | Mirror, rename, repackage, publish — this engine under this name |
+| ✅ | PostgreSQL 17.4 grammar + catalogue **vendored in this repo**, licence intact |
+| ✅ | The real `nesql` CLI crate in `rust/` — builds against `nedb-engine` from crates.io, 31 integration tests |
+| ✅ | The SQL evaluator — joins, subqueries, `EXISTS`, set operations, `array_agg(x ORDER BY y)`, derived tables, several named aggregates in one grouped row — **default, no flag** |
+| ✅ | `AS OF SYSTEM TIME` (sequences **and datetimes**), `VALID AS OF`, `SEARCH` as SQL clauses — one implementation, two front-ends |
+| ✅ | `TRACE` / `TRAVERSE` / `LINK` — answered on the NQL path, which is neSQL's FROM-form |
+| ✅ | Cross-engine parity assertions in CI — the same corpus through both engines, asserted identical |
+| ✅ | NQL grammar reference + NEDB specs under [`docs/`](docs/) |
+
+**Install — one line carries the engine, the daemon and the CLI:**
+
+```bash
+pip install nedb-engine      # nesql + nedbd binaries included
+cargo add nesql              # or the CLI crate directly, from crates.io
+```
+
+```console
+$ nesql --db ./store version
+nesql    8.0.0
+engine   8.0.0
+grammar  grammar_v1 (f82e7e0216468413)
+```
 
 **Today, right now, in production:** the PostgreSQL endpoint in
-[`nedb-engine`](https://github.com/Eth-Interchained/nedb) already answers `psql`,
+[`nedb-engine`](https://github.com/Eth-Interchained/nedb) answers `psql`,
 SQLAlchemy (Core *and* ORM), asyncpg and node-postgres against a live store, with
 `pg_catalog` and `information_schema` implemented as genuinely queryable
-relations — and with `NEDBD_SQL_ENGINE=1`, a real SQL evaluator rather than a
-translation.
-
-It is opt-in for a reason worth stating rather than burying. The parity harness
-proves the two engines agree across its corpus — but a corpus proves agreement on
-the shapes somebody thought to test. The evaluator also still materialises each
-relation: the `WHERE` reaches the scan, which narrows *what* is read, not
-*whether*. "Correct on a handful of rows" is not "safe on millions", so the
-default moves when a bigger corpus and a measured large collection say it can.
+relations. The SQL evaluator is the default — there is no flag; a statement the
+evaluator cannot parse falls through to the translator, which is how every write
+is served.
 
 ## The names
 
 ```bash
-pip install nesql                  # PyPI
-cargo add nesql                    # crates.io
-npm install nesql-engine           # npm
+pip install nesql                  # PyPI — the language reference
+cargo add nesql                    # crates.io — the REAL CLI crate
+npm install nesql-engine           # npm — the language reference
+pip install nedb-engine            # THE ENGINE + CLI (what you actually want)
 ```
 
-All three are **reserved placeholders** today — each one loads, reports the vendored
-PostgreSQL release, and answers `is_release() == false`. None of them pretends to be a
-driver, because a package that imports cleanly and then lies is worse than one that
-isn't published yet.
+The PyPI and npm packages mirror this repository's reference; the crates.io
+crate is the working CLI. Every package is version-aligned with `nedb-engine`
+(8.0.0 at this writing).
 
 On npm the bare name `nesql` is refused by the registry's typosquat guard — *"too
 similar to existing packages mssql, mysql"* — which, given the company that puts us in,

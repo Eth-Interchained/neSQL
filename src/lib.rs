@@ -1,43 +1,48 @@
 // SPDX-FileCopyrightText: 2026 INTERCHAINED LLC
 // SPDX-License-Identifier: BUSL-1.1
-// neSQL · © 2026 INTERCHAINED LLC × Eth-Interchained × Vex (Claude Opus 5)
+// NEDB · © 2026 INTERCHAINED LLC × Eth-Interchained × Vex (Claude Opus 5)
 
-//! # neSQL — PostgreSQL's grammar, NEDB's memory
+//! neSQL — the grammar and the command-line surface.
 //!
-//! SQL you already know, over a database that never forgets and can prove it.
+//! neSQL owns the grammar AND the CLI; NEDB is the engine and runtime beneath
+//! it. Nothing in here reaches into engine internals: every fact reported comes
+//! from the public API of the `nedb-engine` crate, so the CLI cannot drift into
+//! reporting a private detail that the engine is free to change.
 //!
-//! **This crate is a reserved name and a statement of intent.** The grammar is
-//! vendored (PostgreSQL 17.4 `gram.y`, licence intact) and the executor
-//! foundations — joins, subqueries, set operations, `array_agg(x ORDER BY y)`,
-//! derived tables — already ship inside [`nedb-engine`]. What lands here is the
-//! front-end that lets them be reached by ordinary SQL rather than by a
-//! translated dialect.
+//! Layout:
 //!
-//! Until then, the working PostgreSQL wire endpoint lives in `nedb-engine`:
-//! `nedbd --pg-port 5433` answers `psql`, SQLAlchemy, asyncpg and
-//! node-postgres today.
-//!
-//! [`nedb-engine`]: https://crates.io/crates/nedb-engine
+//! ```text
+//! main.rs      argv in, exit code out, and nothing else
+//! args.rs      parsing and intent resolution (total, refusing)
+//! grammar.rs   the grammar surface, written down, plus its digest
+//! out.rs       Report -> text, and the exit-code table
+//! cmd/*.rs     one module per command; each returns a Report
+//! ```
 
-/// The PostgreSQL release this crate's vendored grammar is taken from.
-pub const VENDORED_POSTGRES: &str = "17.4";
+pub mod args;
+pub mod cmd;
+pub mod grammar;
+pub mod out;
 
-/// Crate version.
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+use std::path::PathBuf;
 
-/// Where the real thing runs today.
-pub const ENGINE: &str = "https://github.com/Eth-Interchained/nedb";
-
-/// Is this a usable query engine yet? No — and it says so rather than pretending.
-pub const fn is_release() -> bool {
-    false
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_does_not_overstate_itself() {
-        assert!(!super::is_release());
-        assert_eq!(super::VENDORED_POSTGRES, "17.4");
+/// Where the database lives, given `--db`.
+///
+/// `--db`, else `$NEDB_PATH`, else `./nedb-data`. Resolution is here rather
+/// than in the parser so the parser stays a pure function of its arguments.
+pub fn db_path(flag: Option<&PathBuf>) -> PathBuf {
+    if let Some(p) = flag {
+        return p.clone();
+    }
+    match std::env::var_os("NEDB_PATH") {
+        Some(v) if !v.is_empty() => PathBuf::from(v),
+        _ => PathBuf::from("./nedb-data"),
     }
 }
+
+/// The CLI's own version. One of the two dimensions `nesql version` reports.
+pub const CLI_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// The engine version this binary was compiled against, or `unknown` when the
+/// build could not determine it. See `build.rs` for why it is never guessed.
+pub const ENGINE_VERSION: &str = env!("NESQL_ENGINE_VERSION");
