@@ -21,7 +21,7 @@ crate (rust/), the NQL grammar reference, and the NEDB specs.
 
 #: The PostgreSQL release this package's vendored grammar is taken from.
 VENDORED_POSTGRES = "17.4"
-__version__ = "8.0.0"
+__version__ = "8.0.1"
 #: Where the working engine + CLI live (one pip install carries both).
 ENGINE = "https://github.com/Eth-Interchained/nedb"
 

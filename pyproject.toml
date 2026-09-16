@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nesql"
-version = "8.0.0"
+version = "8.0.1"
 description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. The neSQL CLI and the language reference. Ships inside nedb-engine."
 readme = "README.md"
 requires-python = ">=3.8"
