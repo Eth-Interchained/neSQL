@@ -12,7 +12,7 @@ license = { text = "BUSL-1.1" }
 authors = [{ name = "Interchained LLC", email = "licensing@interchained.org" }]
 keywords = ["sql", "postgresql", "database", "temporal", "time-travel", "nedb", "nesql"]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
   "Programming Language :: Rust",
@@ -20,10 +20,19 @@ classifiers = [
   "Topic :: Database :: Database Engines/Servers",
 ]
 
+# The CLI IS the product here, and the binary ships inside nedb-engine — so
+# installing nesql PULLS the engine, and the console script below resolves the
+# binary from the engine's installed files (or PATH, or a cargo build). One
+# dependency, one binary, every package carries a working CLI.
+dependencies = ["nedb-engine>=8.8.8"]
+
 [project.urls]
 Homepage = "https://github.com/Eth-Interchained/neSQL"
 Repository = "https://github.com/Eth-Interchained/neSQL"
 Engine = "https://github.com/Eth-Interchained/nedb"
+
+[project.scripts]
+nesql = "nesql.cli:main"
 
 [tool.setuptools]
 packages = ["nesql"]

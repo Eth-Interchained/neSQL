@@ -1,0 +1,19 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "nesql"
+version = "8.0.1"
+description = "PostgreSQL's grammar, NEDB's memory — SQL with time travel, bi-temporal validity and causal provenance. The neSQL CLI and the language reference."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "BUSL-1.1" }
+authors = [{ name = "Interchained LLC", email = "licensing@interchained.org" }]
+
+[tool.maturin]
+# The _native.abi3.so lands INSIDE the nesql/ python package — the engine's
+# nedb-py pattern (nedb/_native.abi3.so) — so `import nesql` picks the native
+# core up alongside the pure-Python reference module.
+python-source = "python"
+module-name = "nesql._native"

@@ -1,12 +1,12 @@
-.DS_Store
 target/
 node_modules/
 dist/
+build/
 *.egg-info/
 __pycache__/
-
-# setuptools leaves build/lib/ behind on `pip install .` / `python -m build`.
-# A copy of nesql/__init__.py was committed from it, so the repo carried two
-# versions of the same module and only one of them was the real one.
-build/
-*.dist-info/
+.DS_Store
+crates/nesql-py/python/
+crates/nesql-py/README.md
+crates/nesql-py/LICENSE
+crates/nesql-py/COPYING-APACHE-2.0.txt
+store/
