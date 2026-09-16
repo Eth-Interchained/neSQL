@@ -1,27 +1,87 @@
 # SPDX-FileCopyrightText: 2026 INTERCHAINED LLC
 # SPDX-License-Identifier: BUSL-1.1
 
-# Publishes the nesql packages when a version tag lands (npm; crates.io is
-# published from the engine repo where the crate lives, and PyPI by twine
-# from a checkout — this workflow exists because registry.npmjs.org is the
-# one registry an operator cannot reach by hand from everywhere).
+# Publishes the nesql packages when a version tag lands: the napi binding
+# (nesql-engine on npm) and the PyO3 wheel (nesql on PyPI) — both built from
+# crates/ here, both carrying the REAL nesql command surface as compiled
+# bindings. crates.io `nesql` (the CLI crate proper) is published from the
+# engine repo, where the crate lives.
 name: publish
 
 on:
   push:
-    tags: ["v*", "*.*.*", "nesql-engine-*"]
+    tags: ["v*", "*.*.*", "nesql-engine-*", "nesql-py-*"]
   workflow_dispatch:
 
 jobs:
   npm:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.settings.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.target }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+      - uses: napi-rs/napi-rs-action@v1
+        with:
+          build-cwd: crates/nesql-node
+          target: ${{ matrix.settings.target }}
+          package-name: nesql-engine
       - name: Publish nesql-engine to npm
-        run: npm publish
+        if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stage the python package into the binding crate
+        run: bash scripts/stage_maturin.sh
+      - name: Build wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: crates/nesql-py
+          target: ${{ matrix.target }}
+          args: --release --out ../../dist
+          manylinux: auto
+      - name: Publish to PyPI
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          password: ${{ secrets.PYPI_API_TOKEN }}
